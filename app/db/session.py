@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from app.core.config import settings
 
-# Currently PostgreSQL is not running on my machine so using SQLite for testing purposes.
-# DATABASE_URL = "postgresql://postgres:password@localhost:5432/newsfeed"
-# engine = create_engine(DATABASE_URL)
-DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+DATABASE_URL = settings.DATABASE_URL
+
+# SQLite needs check_same_thread=False; other DBs don't accept that arg
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

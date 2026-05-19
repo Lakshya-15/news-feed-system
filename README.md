@@ -1,55 +1,106 @@
-## Feed Ranking System (WIP)
+## News Feed Ranking System
 
-I’m building a simplified version of how apps like Instagram/Twitter decide:
+A backend system that replicates how apps like Instagram/Twitter decide: **”Which posts should a user see, and in what order?”**
 
-“What should a user see, and in what order?”
-
-This goes beyond a basic backend — the focus is on feed generation and ranking, not just APIs.
+The focus is on feed generation and ranking strategy — not just CRUD APIs.
 
 ---
 
-## Status
+## Problem Being Solved
 
-Actively under development with regular commits.
+A feed system has 3 core layers:
 
-This is a work in progress — things may break, change, or get rewritten as I experiment and learn.
+- **Data** — users, posts, follow graph
+- **Retrieval** — which posts are candidates for a user’s feed
+- **Ranking** — what order they appear in
 
----
-
-## Problem I’m Solving
-
-A feed system has 3 core parts:
-- Data → users, posts, follows  
-- Retrieval → candidate posts  
-- Ranking → what shows up first  
-
-Most projects stop at data. I’m building all three.
+Most projects only do the first layer. This one does all three.
 
 ---
 
-## Current Direction
+## Architecture
 
-- Store posts in the database  
-- Generate feed (experimenting with push vs pull)  
-- Cache results using Redis  
-- Rank posts before returning  
+```
+User creates post
+    ↓
+Store in DB (PostgreSQL)
+    ↓
+Fan-out to followers (Push model) OR fetch on demand (Pull model)
+    ↓
+Feed cache updated (Redis sorted sets)
+    ↓
+User opens app → fetch feed → rank posts → return top N
+```
+
+**Key design choices:**
+- `api/` — thin layer, only request/response
+- `services/` — all business logic lives here
+- `workers/` — async fan-out processing
+- `cache/` — Redis feed cache, isolated from the rest
 
 ---
 
-## Progress
+## Feed Strategies
 
-- Basic schema and APIs  
-- Initial ranking logic  
-- Feed caching (in progress)  
-- Push vs pull strategies (in progress)  
-- Async processing (in progress)  
-- ML-based ranking (planned)  
+| Strategy | How | Speed | Trade-off |
+|----------|-----|-------|-----------|
+| Pull model | Compute feed on read | Slow | Always fresh, simple |
+| Push model | Pre-build feed on write | Fast | Write amplification |
+| Hybrid | Push for normal users, pull for celebrities | Fast | Handles scale correctly |
 
 ---
 
-## Ranking (Current)
+## Ranking Formula
 
 ```python
-score = w1 * recency + w2 * engagement + w3 * affinity
+score = 0.5 * recency + 0.3 * engagement + 0.2 * affinity
+```
 
-Later I plan to update it with a ML model
+- **Recency** — `exp(-hours_since_post / 24)`
+- **Engagement** — likes + clicks on the post
+- **Affinity** — how often the viewer has interacted with this author
+
+Planned: replace formula with a trained logistic regression model.
+
+---
+
+## Setup
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# copy and edit env file
+cp .env.example .env
+
+uvicorn app.main:app --reload
+```
+
+API docs available at `http://localhost:8000/docs`
+
+---
+
+## API Endpoints
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/users/` | Create a user |
+| POST | `/posts/` | Create a post |
+| POST | `/follows/` | Follow a user |
+| GET | `/feed/` | Get ranked feed for a user *(coming soon)* |
+
+---
+
+## Build Progress
+
+Currently in **Phase 1 of 7** — laying the foundation (config, models, schemas, dependency injection, route cleanup).
+Upcoming phases cover the services layer, Redis caching, push/pull strategies, async processing, observability, and ML-based ranking.
+
+---
+
+## Author
+
+**Lakshya Garg**
+garglakshya015@gmail.com
+[linkedin.com/in/lakshyagarg1515](https://www.linkedin.com/in/lakshyagarg1515/) · [github.com/Lakshya-15](https://github.com/Lakshya-15)
