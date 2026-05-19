@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.api.routes import users, posts, follows
 from app.db.base import Base
 from app.db.session import engine
+from app.models.engagement import Engagement  # noqa: F401  # pyright: ignore[reportUnusedImport]
 
 Base.metadata.create_all(bind=engine)
 
