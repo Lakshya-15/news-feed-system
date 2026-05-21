@@ -94,8 +94,8 @@ API docs available at `http://localhost:8000/docs`
 
 ## Build Progress
 
-Project config and all DB models are in place — `User`, `Post`, `Follow`, and `Engagement` with proper fields and timezone-aware timestamps.
-Currently adding Pydantic schemas and dependency injection to clean up the routes before building the core feed logic.
+Project config, all DB models, and Pydantic schemas are in place — every endpoint now has a typed request body and response shape defined.
+Currently wiring up dependency injection and refactoring the routes to use it before building the core feed logic.
 Upcoming work covers the feed service, Redis caching, push/pull strategies, async processing, and ML-based ranking.
 
 ---
